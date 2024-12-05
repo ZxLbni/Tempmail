@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Temporary Email Generator</title>
+  <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script> <!-- Particles.js -->
+  <style>
+    /* Background animation using particles.js */
+    #particles-js {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 50vh;
+      background: #222;
+      color: #fff;
+      overflow: hidden;
+    }
+    .container {
+      position: relative;
+      z-index: 1;
+      background: rgba(0, 0, 0, 0.8);
+      padding: 20px;
+      border: 5px solid orangered;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+      max-width: 400px;
+      width: 100%;
+      
+      opacity: 0.6;
+    }
+    button {
+      background: blue;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: background 0.3s ease;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    input {
+      width: calc(100% - 20px);
+      padding: 10px;
+      margin-top: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background: rgba(255, 255, 255, 0.8);
+    }
+    #generatedEmail {
+      margin: 10px 0;
+    }
+    #inbox {
+      margin-top: 20px;
+      text-align: center;
+    }
+    .message {
+      border-bottom: 1px solid #ddd;
+      padding: 10px 0;
+    }
+    .copy-button {
+      background: #03a9f4;
+      margin-top: 10px;
+    }
+    .copy-button:hover {
+      background: #0288d1;
+    }
+  </style>
+</head>
+<body>
+  <!-- Particles.js Background -->
+  <div id="particles-js"></div>
+
+  <!-- Main Content -->
+  <div class="container">
+    <h1>TempMail Web</h1>
+    <button id="generateEmail">✉️ Generate Email</button>
+    <p id="generatedEmail"></p>
+    <button id="copyEmail" class="copy-button" style="display: none;">Copy Email</button>
+
+    <h2>Check Inbox</h2>
+    <input type="text" id="emailInput" placeholder="Enter email address" />
+    <button id="checkInbox">📬 Check Inbox</button>
+    <div id="inbox"></div>
+  </div>
+
+  <script>
+    // Initialize particles.js
+    particlesJS("particles-js", {
+      particles: {
+        number: {
+          value: 50,
+          density: { enable: true, value_area: 800 }
+        },
+        color: { value: "#ffffff" },
+        shape: {
+          type: "circle",
+          stroke: { width: 0, color: "#000000" }
+        },
+        opacity: {
+          value: 0.5,
+          random: false,
+          anim: { enable: false, speed: 1, opacity_min: 0.1, sync: false }
+        },
+        size: {
+          value: 3,
+          random: true,
+          anim: { enable: false, speed: 40, size_min: 0.1, sync: false }
+        },
+        line_linked: {
+          enable: true,
+          distance: 150,
+          color: "#ffffff",
+          opacity: 0.4,
+          width: 1
+        },
+        move: {
+          enable: true,
+          speed: 3,
+          direction: "none",
+          random: false,
+          straight: false,
+          out_mode: "out",
+          bounce: false,
+          attract: { enable: false, rotateX: 600, rotateY: 1200 }
+        }
+      },
+      interactivity: {
+        detect_on: "canvas",
+        events: {
+          onhover: { enable: true, mode: "repulse" },
+          onclick: { enable: true, mode: "push" },
+          resize: true
+        }
+      },
+      retina_detect: true
+    });
+
+    // Email generation logic
+    const domains = ["rteet.com", "dpptd.com", "1secmail.com", "1secmail.org", "1secmail.net"];
+    const generateButton = document.getElementById("generateEmail");
+    const generatedEmail = document.getElementById("generatedEmail");
+    const copyEmailButton = document.getElementById("copyEmail");
+
+    generateButton.addEventListener("click", () => {
+      const domain = domains[Math.floor(Math.random() * domains.length)];
+      const email = `${Math.random().toString(36).slice(2, 10)}@${domain}`;
+      generatedEmail.textContent = email;
+      copyEmailButton.style.display = "inline-block";
+
+      copyEmailButton.addEventListener("click", () => {
+        navigator.clipboard.writeText(email).then(() => {
+          alert("Email copied to clipboard!");
+        });
+      });
+    });
+
+    // Check inbox logic
+    document.getElementById("checkInbox").addEventListener("click", async () => {
+      const email = document.getElementById("emailInput").value.trim();
+      const inboxDiv = document.getElementById("inbox");
+      inboxDiv.innerHTML = "";
+
+      if (!email || !domains.some((domain) => email.endsWith(`@${domain}`))) {
+        alert("Please enter a valid email address.");
+        return;
+      }
+
+      const [username, domain] = email.split("@");
+      try {
+        const inboxResponse = await fetch(
+          `https://www.1secmail.com/api/v1/?action=getMessages&login=${username}&domain=${domain}`
+        );
+        const inbox = await inboxResponse.json();
+
+        if (!inbox.length) {
+          inboxDiv.textContent = "Inbox is empty.";
+          return;
+        }
+
+        inbox.forEach(({ id, from, subject }) => {
+          const messageDiv = document.createElement("div");
+          messageDiv.className = "message";
+          messageDiv.innerHTML = `
+            <strong>From:</strong> ${from}<br>
+            <strong>Subject:</strong> ${subject}<br>
+            <button class="copy-button">Copy Message</button>
+          `;
+          inboxDiv.appendChild(messageDiv);
+
+          messageDiv.querySelector(".copy-button").addEventListener("click", () => {
+            navigator.clipboard.writeText(`From: ${from}\nSubject: ${subject}`).then(() => {
+              alert("Message copied to clipboard!");
+            });
+          });
+        });
+      } catch (error) {
+        inboxDiv.textContent = "Error: Unable to fetch inbox.";
+      }
+    });
+  </script>
+</body>
+</html>
